@@ -12,11 +12,20 @@
 // On suppose que les positions voisines de p existent bel et bien, c'est-à-dire
 // que p n'est pas sur le bord de G.
 position voisin_max(grid G, position p) {
+  // Check 3x3 neighborhood for strictly greater value.
   position r = p;
-  ;
-  ;
-  ;
-  return r;
+  double max_val = G[p.i][p.j];
+  
+  for (int i = p.i - 1; i <= p.i + 1; i++) {
+    for (int j = p.j - 1; j <= p.j + 1; j++) {
+      if (G[i][j] > max_val) {
+        max_val = G[i][j];
+        r.i = i;
+        r.j = j;
+      }
+    }
+  }
+  return r; // Returns p if it's a local maximum.
 }
 
 // Algorithme naïf en O(k^2) pour la grille G[A..B] de taille k x k.
@@ -26,11 +35,17 @@ position voisin_max(grid G, position p) {
 // chacun 8 voisins), et que G a au moins un maximum local situé dans G[A..B].
 // Vous n'avez pas à vérifier ces conditions.
 position algo_naif(grid G, position A, position B) {
-  position r = {0, 0};
-  ;
-  ;
-  ;
-  return r;
+  // Sequential traversal to find local max using voisin_max.
+  for (int i = A.i; i <= B.i; i++) {
+    for (int j = A.j; j <= B.j; j++) {
+      position p = {i, j};
+      position v = voisin_max(G, p);
+      if (v.i == p.i && v.j == p.j) {
+        return p;
+      }
+    }
+  }
+  return A; // Fallback, though max exists by constraints.
 }
 
 // Algorithme du gradient pour la grille complète G de taille n x n à partir de
@@ -38,30 +53,99 @@ position algo_naif(grid G, position A, position B) {
 //
 // On suppose que n >= 3.
 position algo_grad(grid G, int n) {
-  position r = {0, 0};
-  ;
-  ;
-  ;
-  return r;
+  // Start at center, shift to highest neighbor until peak reached.
+  position p = {n / 2, n / 2};
+  while (1) {
+    position v = voisin_max(G, p);
+    if (v.i == p.i && v.j == p.j) {
+      return p;
+    }
+    p = v;
+  }
 }
 
 // Retourne une position contenant une valeur maximale dans la grille
 position position_max_cadre(grid G, position A, position B) {
-  position r = {0, 0};
-  ;
-  ;
-  ;
+  // Analyze boundary elements (cadre) and cross.
+  position r = A;
+  double max_val = -1.0;
+  
+  int k = B.i - A.i + 1;
+  int mid_i = A.i + k / 2;
+  int mid_j = A.j + k / 2;
+
+  #define UPDATE_MAX(r_i, r_j) \
+    do { \
+      if (G[(r_i)][(r_j)] > max_val) { \
+        max_val = G[(r_i)][(r_j)]; \
+        r.i = (r_i); \
+        r.j = (r_j); \
+      } \
+    } while(0)
+
+  // Scan rows (top, bottom, horizontal median, extension if k is even)
+  for (int j = A.j; j <= B.j; j++) {
+    UPDATE_MAX(A.i, j);
+    UPDATE_MAX(B.i, j);
+    UPDATE_MAX(mid_i, j);
+    if (k % 2 == 0) UPDATE_MAX(A.i + 1, j);
+  }
+
+  // Scan columns (left, right, vertical median, extension if k is even)
+  for (int i = A.i; i <= B.i; i++) {
+    UPDATE_MAX(i, A.j);
+    UPDATE_MAX(i, B.j);
+    UPDATE_MAX(i, mid_j);
+    if (k % 2 == 0) UPDATE_MAX(i, A.j + 1);
+  }
+  
+  #undef UPDATE_MAX
+
   return r;
 }
 
 // Algorithme récursif en O(n). On fait les mêmes hypothèses que pour
 // algo_naif().
 position algo_rec(grid G, position A, position B) {
-  position r = {0, 0};
-  ;
-  ;
-  ;
-  return r;
+  int k = B.i - A.i + 1;
+  
+  // 1. Base case: size 4 or less, use naive.
+  if (k <= 4) {
+    return algo_naif(G, A, B);
+  }
+
+  // 2. Find maximum on the cadre/cross.
+  position m = position_max_cadre(G, A, B);
+  
+  // 3. Check if it's a local maximum.
+  position v = voisin_max(G, m);
+  if (v.i == m.i && v.j == m.j) {
+    return m;
+  }
+
+  // 4. Resolve boundaries for recursive descent based on greater neighbor.
+  int mid_i = A.i + k / 2;
+  int mid_j = A.j + k / 2;
+  position a, b;
+
+  if (v.i < mid_i) { // Top half
+    a.i = (k % 2 == 0) ? A.i + 2 : A.i + 1;
+    b.i = mid_i - 1;
+  } else {           // Bottom half
+    a.i = mid_i + 1;
+    b.i = B.i - 1;
+  }
+
+  if (v.j < mid_j) { // Left half
+    a.j = (k % 2 == 0) ? A.j + 2 : A.j + 1;
+    b.j = mid_j - 1;
+  } else {           // Right half
+    a.j = mid_j + 1;
+    b.j = B.j - 1;
+  }
+
+  // 5. Recursive call.
+  return algo_rec(G, a, b);
 }
 
 int main(int argc, char *argv[]) {

@@ -4,121 +4,226 @@
 // SEUL FICHIER À MODIFIER //
 //-------------------------//
 
-//---------------------------------------------------------------------------//
-// Une fois une fonction écrite, vous pouvez enlever __attribute__((unused)) //
-// pour chacun de ses arguments, de façon que le compilateur indique les     //
-// arguments inutilisés.                                                     //
-//---------------------------------------------------------------------------//
+// Global variable for Karatsuba sign propagation.
+int sign = 1;
 
-//---------------------------------------------------------------------------//
-
-// Retourne le nombre de chiffres significatifs dans un nombre,
-// c'est-à-dire le nombre de chiffres sans compter les zéros en tête dans
-// l'écriture habituelle du nombre.
-//
-// Exemples en base 10 :
-// Si le tableau X->digit vaut {1,2,3,4}, number_length(X) renvoie 4.
-// Si le tableau X->digit vaut {0,1,2,3,4}, number_length(X) renvoie 5.
-// Si le tableau X->digit vaut {0,1,2,3,4,0,0,0}, number_length(X) renvoie 5
-// car les zéros en fin de tableau ne sont pas significatifs.
-//
-// Par convention, si le tableau X->digit ne contient que des 0,
-// number_length(X) renvoie 0.
-int number_length(number *X __attribute__((unused))) {
+// Returns the number of significant digits by scanning from highest index down.
+int number_length(number *X) {
+  if (!X || !X->digit) return 0;
+  for (int i = X->n - 1; i >= 0; i--) {
+    if (X->digit[i] != 0) {
+      return i + 1;
+    }
+  }
   return 0;
 }
 
-// Dans les fonctions suivantes, on suppose que les opérandes X et Y
-// représentent des nombres valides (au moins 1 chiffre, pointeur non NULL,
-// etc.). C'est donc à l'appellant de s'en assurer, pas à la fonction que vous
-// avez à écrire.
-//
-// Les opérandes X,Y sont toujours considérés positifs.
-//
-// Attention ! Il est possible que X et Y ne soient pas de la même taille.
-
-// Compare deux entiers. Retourne
-// -1 si le nombre représenté par X est < à celui représenté par Y,
-// 0 si les nombres représentés par X et Y sont égaux,
-// 1 si  le nombre représenté par X est > à celui représenté par Y.
-// Attention ! Il est possible que X et Y ne soient pas de la même taille.
-// Attention aussi aux zéros inutiles dans X ou Y.
-int number_sign(number *X __attribute__((unused)),
-                number *Y __attribute__((unused))) {
+// Compares two integers based on length first, then digits from highest to lowest. Returns -1 (X<Y), 1 (X>Y), or 0.
+int number_sign(number *X, number *Y) {
+  int lenX = number_length(X);
+  int lenY = number_length(Y);
+  
+  if (lenX < lenY) return -1;
+  if (lenX > lenY) return 1;
+  
+  for (int i = lenX - 1; i >= 0; i--) {
+    if (X->digit[i] < Y->digit[i]) return -1;
+    if (X->digit[i] > Y->digit[i]) return 1;
+  }
   return 0;
 }
 
-// Renvoie un nombre représentant la somme X+Y de ceux représentés par X et Y.
-// Le calcul doit être en O(n) où n est la taille du plus grand des deux
-// nombres.
-number *number_addition(number *X __attribute__((unused)),
-                        number *Y __attribute__((unused))) {
-  return string_to_number("0");
+// Returns a number representing the sum X+Y with carry logic over max length.
+number *number_addition(number *X, number *Y) {
+  int lenX = number_length(X);
+  int lenY = number_length(Y);
+  int max_len = max(lenX, lenY);
+  
+  number *R = number_new(max_len + 1);
+  int carry = 0;
+  
+  for (int i = 0; i < max_len; i++) {
+    int dx = (i < lenX) ? X->digit[i] : 0;
+    int dy = (i < lenY) ? Y->digit[i] : 0;
+    int sum = dx + dy + carry;
+    R->digit[i] = sum % BASE;
+    carry = sum / BASE;
+  }
+  
+  R->digit[max_len] = carry;
+  return R;
 }
 
-// Renvoie un nombre représentant |X-Y|, c'est-à-dire la valeur absolue la
-// différence des nombres représentés par X et Y.
-//
-// La fonction positionne la variable globale sign pour son utilisation dans la
-// multiplication de Karatsuba (cf. commentaire en début de fichier).
-//
-// Le calcul doit être en O(n) où n est la taille du plus grand des deux
-// nombres.
-number *number_substraction(number *X __attribute__((unused)),
-                            number *Y __attribute__((unused))) {
-  return string_to_number("0");
+// Returns a number representing |X-Y|. Adjusts global sign to indicate negative result if X < Y.
+number *number_substraction(number *X, number *Y) {
+  int cmp = number_sign(X, Y);
+  number *A, *B;
+  
+  if (cmp >= 0) {
+    A = X; B = Y;
+    sign = 1;
+  } else {
+    A = Y; B = X;
+    sign = -1;
+  }
+  
+  int lenA = number_length(A);
+  int lenB = number_length(B);
+  number *R = number_new(lenA);
+  int borrow = 0;
+  
+  for (int i = 0; i < lenA; i++) {
+    int da = A->digit[i];
+    int db = (i < lenB) ? B->digit[i] : 0;
+    int diff = da - db - borrow;
+    
+    if (diff < 0) {
+      diff += BASE;
+      borrow = 1;
+    } else {
+      borrow = 0;
+    }
+    R->digit[i] = diff;
+  }
+  return R;
 }
 
-// Renvoie un nombre représentant celui représenté par X multiplié par BASE^k.
-number *shift(number *X __attribute__((unused)),
-              int k __attribute__((unused))) {
-  return string_to_number("0");
+// Multiplies X by BASE^k. Shifts digits left by k positions.
+number *shift(number *X, int k) {
+  int len = number_length(X);
+  if (len == 0) return number_new(1);
+  
+  number *R = number_new(len + k);
+  for (int i = 0; i < len; i++) {
+    R->digit[i + k] = X->digit[i];
+  }
+  return R;
 }
 
-// Renvoie le nombre représenté par les k chiffres de poids faible de X, ie,
-// obtenu en ne gardant que les k premiers chiffres de X->digit
-// (ce nombre représente X % BASE^k).
-number *low(number *X __attribute__((unused)), int m __attribute__((unused))) {
-  return string_to_number("0");
+// Returns the m lowest weight digits of X. Clamps to X->n to avoid out-of-bounds.
+number *low(number *X, int m) {
+  if (m <= 0) return number_new(1);
+  int size = min(X->n, m);
+  number *R = number_new(m);
+  
+  for (int i = 0; i < size; i++) {
+    R->digit[i] = X->digit[i];
+  }
+  return R;
 }
 
-// Renvoie le nombre représenté par les (X->n - k) chiffres de poids fort de X,
-// ie, obtenu en ne conservant que les X->n-k derniers chiffres de X->digit
-// (ce nombre représente X/BASE^k).
-number *high(number *X __attribute__((unused)), int m __attribute__((unused))) {
-  return string_to_number("0");
+// Returns the remaining highest weight digits of X starting from index m.
+number *high(number *X, int m) {
+  if (m >= X->n) return number_new(1);
+  int size = X->n - m;
+  number *R = number_new(size);
+  
+  for (int i = 0; i < size; i++) {
+    R->digit[i] = X->digit[i + m];
+  }
+  return R;
 }
 
-// Ajoute si besoin des zéros inutiles à l'un des deux nombres représentés par X
-// et Y pour que les tableaux X->digit et Y->digit soient de même taille.
-//
-// Après l'appel, X->digit et Y->digit ont donc la même taille, qui est le
-// maximum des tailles d'origine, et la valeur des entiers représentés par *X et
-// *Y n'est pas changée.
-//
-// Attention à bien mettre à jour les deux champs du nombre modifié.
-//
-// Exemple : si X->digit vaut {1,2,3,4} et Y->digit vaut {1,2,3,4,5,6,7,8},
-// après appel à align_numbers(X,Y), X->digit vaudra {1,2,3,4,0,0,0,0} et
-// Y->digit sera inchangé. X->n vaudra 8 (au lieu de 4 initialement) et Y->n
-// vaudra 8 (il est inchangé).
-void align_numbers(number *X __attribute__((unused)),
-                   number *Y __attribute__((unused))) {
-  return;
+// Aligns X and Y to have the same array size via reallocation. Fills new space with 0.
+void align_numbers(number *X, number *Y) {
+  int target = max(X->n, Y->n);
+  
+  if (X->n < target) {
+    X->digit = realloc_wrapper(X->digit, target * sizeof(short));
+    for (int i = X->n; i < target; i++) X->digit[i] = 0;
+    X->n = target;
+  }
+  
+  if (Y->n < target) {
+    Y->digit = realloc_wrapper(Y->digit, target * sizeof(short));
+    for (int i = Y->n; i < target; i++) Y->digit[i] = 0;
+    Y->n = target;
+  }
 }
 
-// Renvoie un nombre représentant le produit X*Y de ceux représentés par X et Y
-// en utilisant l'algorithme de multiplication récursive naïve, en O(n^2) où n
-// est la taille du plus grand des deux nombres.
-number *number_multiplication_recursive(number *X __attribute__((unused)),
-                                        number *Y __attribute__((unused))) {
-  return string_to_number("0");
+// Naive Recursive Multiplication in O(n^2). Splits numbers in half and computes 4 sub-products.
+number *number_multiplication_recursive(number *X, number *Y) {
+  align_numbers(X, Y);
+  int n = X->n;
+  
+  if (n == 1) {
+    int prod = X->digit[0] * Y->digit[0];
+    number *R = number_new(prod >= BASE ? 2 : 1);
+    R->digit[0] = prod % BASE;
+    if (prod >= BASE) R->digit[1] = prod / BASE;
+    return R;
+  }
+  
+  int m = (n + 1) / 2;
+  number *x_low = low(X, m);
+  number *x_high = high(X, m);
+  number *y_low = low(Y, m);
+  number *y_high = high(Y, m);
+
+  number *a = number_multiplication_recursive(x_high, y_high);
+  number *b = number_multiplication_recursive(x_low, y_high);
+  number *c = number_multiplication_recursive(x_high, y_low);
+  number *d = number_multiplication_recursive(x_low, y_low);
+
+  number *b_plus_c = number_addition(b, c);
+  number *a_shifted = shift(a, 2 * m);
+  number *bc_shifted = shift(b_plus_c, m);
+
+  number *t1 = number_addition(a_shifted, bc_shifted);
+  number *res = number_addition(t1, d);
+
+  // Free intermediate allocations to prevent memory leaks.
+  number_multiple_free(x_low, x_high, y_low, y_high, a, b, c, d, b_plus_c, a_shifted, bc_shifted, t1, NULL);
+
+  return res;
 }
 
-// Renvoie un nombre représentant le produit X*Y de ceux représentés par X et Y
-// en utilisant l'algorithme de multiplication récursive Karatsuba, en O(n^1.59)
-// ou n est la taille du plus grand des deux nombres.
-number *number_multiplication_karatsuba(number *X __attribute__((unused)),
-                                        number *Y __attribute__((unused))) {
-  return string_to_number("0");
+// Karatsuba Multiplication in O(n^1.59). Splits numbers in half and computes 3 sub-products.
+number *number_multiplication_karatsuba(number *X, number *Y) {
+  align_numbers(X, Y);
+  int n = X->n;
+  
+  if (n <= 1) {
+    int prod = X->digit[0] * Y->digit[0];
+    number *R = number_new(prod >= BASE ? 2 : 1);
+    R->digit[0] = prod % BASE;
+    if (prod >= BASE) R->digit[1] = prod / BASE;
+    return R;
+  }
+  
+  int m = (n + 1) / 2;
+  number *x_high = high(X, m);
+  number *x_low = low(X, m);
+  number *y_high = high(Y, m);
+  number *y_low = low(Y, m);
+
+  number *a = number_multiplication_karatsuba(x_high, y_high);
+  number *c = number_multiplication_karatsuba(x_low, y_low);
+
+  number *dx = number_substraction(x_high, x_low);
+  int sx = sign; 
+
+  number *dy = number_substraction(y_high, y_low);
+  int sy = sign;
+
+  number *d = number_multiplication_karatsuba(dx, dy);
+  number *a_plus_c = number_addition(a, c);
+  
+  number *b;
+  if (sx == sy) {
+    b = number_substraction(a_plus_c, d);
+  } else {
+    b = number_addition(a_plus_c, d);
+  }
+
+  number *a_shifted = shift(a, 2 * m);
+  number *b_shifted = shift(b, m);
+
+  number *t1 = number_addition(a_shifted, b_shifted);
+  number *res = number_addition(t1, c);
+
+  // Free intermediate allocations to prevent memory leaks.
+  number_multiple_free(x_high, x_low, y_high, y_low, a, c, dx, dy, d, a_plus_c, b, a_shifted, b_shifted, t1, NULL);
+
+  return res;
 }

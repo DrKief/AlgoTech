@@ -91,10 +91,19 @@ config new_config(int n) {
 // [COMPLÉTEZ CETTE FONCTION]
 //
 config copy_config(config C) {
-    ;
-    ;
-    ;
-    return NULL;
+    config C_copy = new_config(C->n);
+    C_copy->i0 = C->i0;
+    C_copy->j0 = C->j0;
+    C_copy->cost = C->cost;
+    C_copy->score = C->score;
+    C_copy->parent = C->parent;
+    
+    for (int i = 0; i < C->n; i++) {
+        for (int j = 0; j < C->n; j++) {
+            C_copy->G[i][j] = C->G[i][j];
+        }
+    }
+    return C_copy;
 }
 
 // Trouve les coordonnées i,j de la case C->G[i][j] qui vaut 0,
@@ -104,10 +113,15 @@ config copy_config(config C) {
 // [COMPLÉTEZ CETTE FONCTION]
 //
 void set_zero(config C) {
-    ;
-    ;
-    ;
-    return;
+    for (int i = 0; i < C->n; i++) {
+        for (int j = 0; j < C->n; j++) {
+            if (C->G[i][j] == 0) {
+                C->i0 = i;
+                C->j0 = j;
+                return;
+            }
+        }
+    }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -142,10 +156,32 @@ void set_zero(config C) {
 // [COMPLÉTEZ CETTE FONCTION]
 //
 config move(config C, char m) {
-    ;
-    ;
-    ;
-    return NULL;
+    int i = C->i0;
+    int j = C->j0;
+
+    // Moving a tile UP ('h') means the empty space moves DOWN
+    if (m == 'h') i++;
+    // Moving a tile DOWN ('b') means the empty space moves UP
+    else if (m == 'b') i--;
+    // Moving a tile LEFT ('g') means the empty space moves RIGHT
+    else if (m == 'g') j++;
+    // Moving a tile RIGHT ('d') means the empty space moves LEFT
+    else if (m == 'd') j--;
+    else return NULL;
+
+    // Check bounds
+    if (i < 0 || i >= C->n || j < 0 || j >= C->n) {
+        return NULL;
+    }
+
+    config C_new = copy_config(C);
+    int temp;
+    SWAP(C_new->G[C->i0][C->j0], C_new->G[i][j], temp);
+    
+    C_new->i0 = i;
+    C_new->j0 = j;
+    
+    return C_new;
 }
 
 // Fonction qui génère rapidement une *permutation* aléatoire P de
@@ -171,9 +207,14 @@ config move(config C, char m) {
 //
 void random_permutation(int *P, int k) {
     // Créez ici la permutation aléatoire P de k cases
-    ;
-    ;
-    ;
+    for (int i = 0; i < k; i++) {
+        P[i] = i;
+    }
+    for (int i = k - 1; i >= 1; i--) {
+        int j = random() % (i + 1);
+        int temp;
+        SWAP(P[i], P[j], temp);
+    }
 }
 
 // Fonction de comparaison de deux configurations supposées non NULL selon leur
@@ -190,8 +231,10 @@ void random_permutation(int *P, int k) {
 // [COMPLÉTEZ CETTE FONCTION]
 //
 int fcmp_config(const void *X, const void *Y) {
-    ;
-    ;
+    config cX = (config)X;
+    config cY = (config)Y;
+    if (cX->score < cY->score) return -1;
+    if (cX->score > cY->score) return 1;
     return 0;
 }
 
@@ -208,10 +251,20 @@ typedef int (*heuristic)(config);
 // [COMPLÉTEZ CETTE FONCTION]
 //
 int h1(config X) {
-    ;
-    ;
-    ;
-    return -1;
+    int count = 0;
+    int n = X->n;
+    for (int i = 0; i < n; i++) {
+        for (int j = 0; j < n; j++) {
+            int val = X->G[i][j];
+            if (val != 0) {
+                int expected_val = j + i * n;
+                if (val != expected_val) {
+                    count++;
+                }
+            }
+        }
+    }
+    return count;
 }
 
 // Heuristique donnant la somme des distances des cases, pour toute case de X
@@ -229,10 +282,19 @@ int h1(config X) {
 // [COMPLÉTEZ CETTE FONCTION]
 //
 int h2(config X) {
-    ;
-    ;
-    ;
-    return -1;
+    int dist = 0;
+    int n = X->n;
+    for (int i = 0; i < n; i++) {
+        for (int j = 0; j < n; j++) {
+            int val = X->G[i][j];
+            if (val != 0) {
+                int expected_i = val / n;
+                int expected_j = val % n;
+                dist += abs(i - expected_i) + abs(j - expected_j);
+            }
+        }
+    }
+    return dist;
 }
 
 // Heuristique similaire à h2 sauf que la distance pour une case de
@@ -245,10 +307,20 @@ int h2(config X) {
 // [COMPLÉTEZ CETTE FONCTION POUR UN BONUS]
 //
 int h3(config X) {
-    ;
-    ;
-    ;
-    return -1;
+    int dist = 0;
+    int n = X->n;
+    for (int i = 0; i < n; i++) {
+        for (int j = 0; j < n; j++) {
+            int val = X->G[i][j];
+            if (val != 0) {
+                int expected_i = val / n;
+                int expected_j = val % n;
+                int distance = abs(i - expected_i) + abs(j - expected_j);
+                dist += distance * (val * val);
+            }
+        }
+    }
+    return dist;
 }
 
 // Applique l'algorithme A* muni d'une heuristique h pour le calcul
@@ -274,8 +346,11 @@ config solve(config S, heuristic h) {
     // de départ. NB: L'implémentation du tas qui vous est donnée le
     // redimensionne dynamiquement si besoin est. Vous pouvez donc
     // l'initialiser avec une petite taille, comme 4 par exemple.
-    ;
-    ;
+    H = heap_create(4, fcmp_config);
+    S->cost = 0;
+    S->score = h(S);
+    S->parent = NULL;
+    heap_add(H, S);
 
     if (H == NULL) {
         fprintf(stderr, "%s  Error: heap not allocated.\n", KO);
@@ -297,11 +372,13 @@ config solve(config S, heuristic h) {
             // Uniquement s'il l'est :
             // - mettre à jour les différents champs du voisin,
             // - l'ajouter dans le tas.
-            ;
-            ;
-            ;
-            ;
-            ;
+            config V = move(C, m[i]);
+            if (V != NULL) {
+                V->cost = C->cost + 1;
+                V->score = V->cost + h(V);
+                V->parent = C;
+                heap_add(H, V);
+            }
         }
     }
 

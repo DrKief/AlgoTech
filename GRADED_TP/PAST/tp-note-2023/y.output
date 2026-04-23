@@ -1,0 +1,517 @@
+Terminals unused in grammar
+
+    IDENTIFIER
+    '='
+
+
+Grammar
+
+    0 $accept: s $end
+
+    1 s: s ';'
+    2  | s e ';'
+    3  | s LENGTH '(' e ')' ';'
+    4  | s EXIT
+    5  | s BASETOK '(' NEWBASE ')' ';'
+    6  | s e EQ e ';'
+    7  | s e '<' e ';'
+    8  | s e '>' e ';'
+    9  | s LEXICAL_ERROR ';'
+   10  | s error ';'
+   11  | ε
+
+   12 e: e '+' e
+   13  | e '-' e
+   14  | e '*' e
+   15  | e MKAR e
+   16  | '(' e ')'
+   17  | '-' e
+   18  | NUMBER
+
+
+Terminals, with rules where they appear
+
+    $end (0) 0
+    '(' (40) 3 5 16
+    ')' (41) 3 5 16
+    '*' (42) 14
+    '+' (43) 12
+    '-' (45) 13 17
+    ';' (59) 1 2 3 5 6 7 8 9 10
+    '<' <int_value> (60) 7
+    '=' (61)
+    '>' <int_value> (62) 8
+    error (256) 10
+    NUMBER <signed_number> (258) 18
+    IDENTIFIER <name> (259)
+    NEWBASE <int_value> (260) 5
+    EQ <int_value> (261) 6
+    MKAR (262) 15
+    UMINUS (263)
+    LENGTH (264) 3
+    EXIT (265) 4
+    BASETOK (266) 5
+    LEXICAL_ERROR (267) 9
+
+
+Nonterminals, with rules where they appear
+
+    $accept (22)
+        on left: 0
+    s (23)
+        on left: 1 2 3 4 5 6 7 8 9 10 11
+        on right: 0 1 2 3 4 5 6 7 8 9 10
+    e <signed_number> (24)
+        on left: 12 13 14 15 16 17 18
+        on right: 2 3 6 7 8 12 13 14 15 16 17
+
+
+State 0
+
+    0 $accept: • s $end
+
+    $default  reduce using rule 11 (s)
+
+    s  go to state 1
+
+
+State 1
+
+    0 $accept: s • $end
+    1 s: s • ';'
+    2  | s • e ';'
+    3  | s • LENGTH '(' e ')' ';'
+    4  | s • EXIT
+    5  | s • BASETOK '(' NEWBASE ')' ';'
+    6  | s • e EQ e ';'
+    7  | s • e '<' e ';'
+    8  | s • e '>' e ';'
+    9  | s • LEXICAL_ERROR ';'
+   10  | s • error ';'
+
+    $end           shift, and go to state 2
+    error          shift, and go to state 3
+    NUMBER         shift, and go to state 4
+    '-'            shift, and go to state 5
+    LENGTH         shift, and go to state 6
+    EXIT           shift, and go to state 7
+    BASETOK        shift, and go to state 8
+    LEXICAL_ERROR  shift, and go to state 9
+    ';'            shift, and go to state 10
+    '('            shift, and go to state 11
+
+    e  go to state 12
+
+
+State 2
+
+    0 $accept: s $end •
+
+    $default  accept
+
+
+State 3
+
+   10 s: s error • ';'
+
+    ';'  shift, and go to state 13
+
+
+State 4
+
+   18 e: NUMBER •
+
+    $default  reduce using rule 18 (e)
+
+
+State 5
+
+   17 e: '-' • e
+
+    NUMBER  shift, and go to state 4
+    '-'     shift, and go to state 5
+    '('     shift, and go to state 11
+
+    e  go to state 14
+
+
+State 6
+
+    3 s: s LENGTH • '(' e ')' ';'
+
+    '('  shift, and go to state 15
+
+
+State 7
+
+    4 s: s EXIT •
+
+    $default  reduce using rule 4 (s)
+
+
+State 8
+
+    5 s: s BASETOK • '(' NEWBASE ')' ';'
+
+    '('  shift, and go to state 16
+
+
+State 9
+
+    9 s: s LEXICAL_ERROR • ';'
+
+    ';'  shift, and go to state 17
+
+
+State 10
+
+    1 s: s ';' •
+
+    $default  reduce using rule 1 (s)
+
+
+State 11
+
+   16 e: '(' • e ')'
+
+    NUMBER  shift, and go to state 4
+    '-'     shift, and go to state 5
+    '('     shift, and go to state 11
+
+    e  go to state 18
+
+
+State 12
+
+    2 s: s e • ';'
+    6  | s e • EQ e ';'
+    7  | s e • '<' e ';'
+    8  | s e • '>' e ';'
+   12 e: e • '+' e
+   13  | e • '-' e
+   14  | e • '*' e
+   15  | e • MKAR e
+
+    '<'   shift, and go to state 19
+    '>'   shift, and go to state 20
+    EQ    shift, and go to state 21
+    '+'   shift, and go to state 22
+    '-'   shift, and go to state 23
+    '*'   shift, and go to state 24
+    MKAR  shift, and go to state 25
+    ';'   shift, and go to state 26
+
+
+State 13
+
+   10 s: s error ';' •
+
+    $default  reduce using rule 10 (s)
+
+
+State 14
+
+   12 e: e • '+' e
+   13  | e • '-' e
+   14  | e • '*' e
+   15  | e • MKAR e
+   17  | '-' e •
+
+    $default  reduce using rule 17 (e)
+
+
+State 15
+
+    3 s: s LENGTH '(' • e ')' ';'
+
+    NUMBER  shift, and go to state 4
+    '-'     shift, and go to state 5
+    '('     shift, and go to state 11
+
+    e  go to state 27
+
+
+State 16
+
+    5 s: s BASETOK '(' • NEWBASE ')' ';'
+
+    NEWBASE  shift, and go to state 28
+
+
+State 17
+
+    9 s: s LEXICAL_ERROR ';' •
+
+    $default  reduce using rule 9 (s)
+
+
+State 18
+
+   12 e: e • '+' e
+   13  | e • '-' e
+   14  | e • '*' e
+   15  | e • MKAR e
+   16  | '(' e • ')'
+
+    '+'   shift, and go to state 22
+    '-'   shift, and go to state 23
+    '*'   shift, and go to state 24
+    MKAR  shift, and go to state 25
+    ')'   shift, and go to state 29
+
+
+State 19
+
+    7 s: s e '<' • e ';'
+
+    NUMBER  shift, and go to state 4
+    '-'     shift, and go to state 5
+    '('     shift, and go to state 11
+
+    e  go to state 30
+
+
+State 20
+
+    8 s: s e '>' • e ';'
+
+    NUMBER  shift, and go to state 4
+    '-'     shift, and go to state 5
+    '('     shift, and go to state 11
+
+    e  go to state 31
+
+
+State 21
+
+    6 s: s e EQ • e ';'
+
+    NUMBER  shift, and go to state 4
+    '-'     shift, and go to state 5
+    '('     shift, and go to state 11
+
+    e  go to state 32
+
+
+State 22
+
+   12 e: e '+' • e
+
+    NUMBER  shift, and go to state 4
+    '-'     shift, and go to state 5
+    '('     shift, and go to state 11
+
+    e  go to state 33
+
+
+State 23
+
+   13 e: e '-' • e
+
+    NUMBER  shift, and go to state 4
+    '-'     shift, and go to state 5
+    '('     shift, and go to state 11
+
+    e  go to state 34
+
+
+State 24
+
+   14 e: e '*' • e
+
+    NUMBER  shift, and go to state 4
+    '-'     shift, and go to state 5
+    '('     shift, and go to state 11
+
+    e  go to state 35
+
+
+State 25
+
+   15 e: e MKAR • e
+
+    NUMBER  shift, and go to state 4
+    '-'     shift, and go to state 5
+    '('     shift, and go to state 11
+
+    e  go to state 36
+
+
+State 26
+
+    2 s: s e ';' •
+
+    $default  reduce using rule 2 (s)
+
+
+State 27
+
+    3 s: s LENGTH '(' e • ')' ';'
+   12 e: e • '+' e
+   13  | e • '-' e
+   14  | e • '*' e
+   15  | e • MKAR e
+
+    '+'   shift, and go to state 22
+    '-'   shift, and go to state 23
+    '*'   shift, and go to state 24
+    MKAR  shift, and go to state 25
+    ')'   shift, and go to state 37
+
+
+State 28
+
+    5 s: s BASETOK '(' NEWBASE • ')' ';'
+
+    ')'  shift, and go to state 38
+
+
+State 29
+
+   16 e: '(' e ')' •
+
+    $default  reduce using rule 16 (e)
+
+
+State 30
+
+    7 s: s e '<' e • ';'
+   12 e: e • '+' e
+   13  | e • '-' e
+   14  | e • '*' e
+   15  | e • MKAR e
+
+    '+'   shift, and go to state 22
+    '-'   shift, and go to state 23
+    '*'   shift, and go to state 24
+    MKAR  shift, and go to state 25
+    ';'   shift, and go to state 39
+
+
+State 31
+
+    8 s: s e '>' e • ';'
+   12 e: e • '+' e
+   13  | e • '-' e
+   14  | e • '*' e
+   15  | e • MKAR e
+
+    '+'   shift, and go to state 22
+    '-'   shift, and go to state 23
+    '*'   shift, and go to state 24
+    MKAR  shift, and go to state 25
+    ';'   shift, and go to state 40
+
+
+State 32
+
+    6 s: s e EQ e • ';'
+   12 e: e • '+' e
+   13  | e • '-' e
+   14  | e • '*' e
+   15  | e • MKAR e
+
+    '+'   shift, and go to state 22
+    '-'   shift, and go to state 23
+    '*'   shift, and go to state 24
+    MKAR  shift, and go to state 25
+    ';'   shift, and go to state 41
+
+
+State 33
+
+   12 e: e • '+' e
+   12  | e '+' e •
+   13  | e • '-' e
+   14  | e • '*' e
+   15  | e • MKAR e
+
+    '*'   shift, and go to state 24
+    MKAR  shift, and go to state 25
+
+    $default  reduce using rule 12 (e)
+
+
+State 34
+
+   12 e: e • '+' e
+   13  | e • '-' e
+   13  | e '-' e •
+   14  | e • '*' e
+   15  | e • MKAR e
+
+    '*'   shift, and go to state 24
+    MKAR  shift, and go to state 25
+
+    $default  reduce using rule 13 (e)
+
+
+State 35
+
+   12 e: e • '+' e
+   13  | e • '-' e
+   14  | e • '*' e
+   14  | e '*' e •
+   15  | e • MKAR e
+
+    $default  reduce using rule 14 (e)
+
+
+State 36
+
+   12 e: e • '+' e
+   13  | e • '-' e
+   14  | e • '*' e
+   15  | e • MKAR e
+   15  | e MKAR e •
+
+    $default  reduce using rule 15 (e)
+
+
+State 37
+
+    3 s: s LENGTH '(' e ')' • ';'
+
+    ';'  shift, and go to state 42
+
+
+State 38
+
+    5 s: s BASETOK '(' NEWBASE ')' • ';'
+
+    ';'  shift, and go to state 43
+
+
+State 39
+
+    7 s: s e '<' e ';' •
+
+    $default  reduce using rule 7 (s)
+
+
+State 40
+
+    8 s: s e '>' e ';' •
+
+    $default  reduce using rule 8 (s)
+
+
+State 41
+
+    6 s: s e EQ e ';' •
+
+    $default  reduce using rule 6 (s)
+
+
+State 42
+
+    3 s: s LENGTH '(' e ')' ';' •
+
+    $default  reduce using rule 3 (s)
+
+
+State 43
+
+    5 s: s BASETOK '(' NEWBASE ')' ';' •
+
+    $default  reduce using rule 5 (s)
