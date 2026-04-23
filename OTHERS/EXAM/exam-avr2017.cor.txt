@@ -1,0 +1,116 @@
+--------------------------------------------------------
+ CORRECTION TYPE EXAM - TECH. ALGO. & PROG. - AVRIL 2017
+ C. GAVOILLE
+--------------------------------------------------------
+
+
+Q1. Problème: "Le Tri"
+     o Entrée: un tableau de n éléments
+     o Sortie: le tableau où les éléments ont été ordonné
+
+
+Q2. Tri fusion: on coupe en deux moitiés le tableau, on tri chaque
+    moitié récursivement, puis on les fusionne en temps linéaire.
+
+
+Q3. La complexité est en O(nlogn).
+
+
+Q4. A1 = {5,3,1,2,4} et A2 = {5,1,3,2,4}
+
+    Oui, il existe toujours un minimum local. Le plus petit élément
+    est nécessairement un minimum local, ses éléments adjacents étant
+    nécessairement supérieurs (et strictement car tous différents).
+
+
+Q5. Il y a plusieurs algorithmes possibles.
+    En voici un:
+
+    int algo_naif(int *A,int n){
+      if( n==1 || A[0]<A[1] ) return 0;
+      for(int i=1;i<n-1;i++)
+        if( A[i-1]>A[i] && A[i]<A[i+1] ) return i;
+      return i;
+    }
+
+
+Q6. Oui: un algorithme exhaustif teste toutes les sorties (ou
+    solutions) possibles, ici un indice. C'est ce que fait
+    l'algorithme naïf. On pouvait considérer un algorithme de type
+    gradient ou bien celui qui cherche l'élément minimum. Dans ces cas
+    là on ne peut plus dire que c'est un algorithme exhaustif même si
+    ce sont tous des algorithmes de complexité linéaires.
+
+
+Q7. Complexité: O(n).
+
+
+Q8. algo_rec(A,i,j) // cherche un min local dans A[i..j]
+     o m=(i+j)/2 // coupe en intervalles A[i..m-1] et A[m+1..j]
+     o si A[m] est un minimum local, renvoyer i
+     o si m>0 et A[m-1]<A[m], renvoyer algo_rec(A,i,m-1)
+     o renvoyer algo_rec(A,m+1,j)
+
+
+Q9. T(n) = T(n/2) + O(1) car il y a au plus un appel récursif, le
+    reste étant en O(1). C'est la récurrence classique de la
+    dichotomie. D'après le Master Theorem, T(n) = O(logn).
+
+
+Q10. Cela peut être n^2, comme par exemple un chemin Hamiltonien de la
+     grille où les éléments rencontrés ne font que décroître. La
+     complexité est donc au moins cette longueur, soit Omega(n^2).
+     D'un autre coté, toute suite dans la grille qui ne repasse pas
+     deux fois par le même point est de longueur au plus n^2. Donc la
+     complexité de l'agorithme du gradient est en Theta(n^2).
+
+
+Q11. C'est parce qu'on ne peut pas recroiser la croix médiane ou le
+     bord puisque tous leurs éléments sont strictement supérieurs à s.
+
+
+Q12.
+
+ min2D_rec(G,(x0,y0),(x1,y1)):
+
+  fonction qui renvoie un minimum local dans la sous-grille de G entre
+  les positions (x0,y0) et (x1,y1) bornes comprises, en supposant que
+  les 4 voisins de chaque élément de la grille existent bien. Donc au
+  départ, pour le 1er appel, il faut poser (x0,y0) = (1,1) et (x1,y1)
+  = (n,n) et rajouter autour de G un bord avec +∞, le bord étant les
+  positions (a,b) avec a ∈ {0,n+1} ou b ∈ {0,n+1}.
+
+ o Soit (mx,my) = ((x0+x1)/2,(y0+y1)/2) le centre de la croix médiane.
+
+ o Chercher la position (i,j) de l'élément minimum parmi tous les
+   éléments de la croix et du bord, c'est-à-dire ceux en position
+   (a,b) subset [x0,y0]×[x1,y1] et tq a ∈ {x0,mx,x1} ou b ∈
+   {y0,my,y1}.
+
+ o Si (i,j) est un minimum local, alors renvoyer (i,j)
+   [ici les 4 voisins existent toujours dans G]
+
+ o Soit (i',j') un élément voisin de (i,j) inférieur à (i,j).
+ 
+   si i'<i, [un des deux quadrants à gauche de la croix]
+            poser x2=x0+1 et x3=mx-1
+            sinon x2=mx+1 et x3=x1-1
+
+   si j'<j, [un des deux quadrants au-dessus de la croix]
+            poser y2=y0+1 et y3=my-1
+            sinon y2=my+1 et y3=y1-1
+	    
+ o Renvoyer min2D_rec(G,(x2,y2),(x3,y3))
+
+
+Q13. T(n) = T(n/2) + O(n). Le terme O(n) est le temps nécessaire pour
+     trouver le minimum de la croix médiane et du bord. D'après le
+     Master Theorem, on a T(n) = O(n).
+
+
+Q14. Soit A un algorithme pour le minimum absolu. Si A visite n^2-1
+     éléments, alors une des positions, disons (i,j), n'est pas
+     examinée par A. Or suivant G[i][j] le résultat peut être
+     différent. Donc sans examiner cet élément, A ne peut pas donner
+     le bon résultat dans tous les cas. La complexité est donc au
+     moins n^2-1 soit en Omega(n^2).

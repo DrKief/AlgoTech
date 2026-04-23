@@ -1,0 +1,94 @@
+------------------------------------------------------------------
+ CORRECTION TYPE EXAM SESSION 2 - TECH. ALGO. & PROG. - JUIN 2017
+ C. GAVOILLE
+------------------------------------------------------------------
+
+
+Q1.
+    int dicho(double x, double A, int n){
+      if(n==0) return 0;
+      int m=n/2;
+      if(x==A[m]) return 1;
+      if(x<A[m]) return dicho(x,A,m);
+      return dicho(x,A+m,m-n);
+    }
+
+
+Q2. T(n) = T(n/2) + O(1)
+
+
+Q3. T(n) = O(log(n))
+
+
+Q4.
+    Problème: Voyageur de commerce
+    Entrée: (V,d) où V est un ensemble de n points du plan et
+            une fonction de distance d(.,.)
+    Sortie: un ordre v_0, ..., v_{n-1} des sommets de V tel que
+            sum_{i=0}^n d(v_i, v_{(i+1) mod n}) est minimum
+
+
+Q5. OPT(V,d) = min_{t in V*} { D(t,V*) + d(t,v_0) }
+
+
+Q6.
+    double TSP_rec(int t, set S){
+      if(card(S)==1) return d(v_0,t);
+      double m=DBL_MAX;
+      set T = minus(S,t);
+      for(int x=0; x<n; x++){
+        if(is_in_set(x,T))
+        m=fmin(m,TSP_rec(x,T)+d(x,t));
+      return m;
+      }    
+
+
+Q7. Soit s = |S|. Dans un premier temps on va supposer que les
+    opérations sur les ensembles prennent un temps négligeable (temps
+    1), de même que la boucle for(int x...). En réalité cela prend un
+    temps plutôt O(n). Mais cela reviendra à multiplier le résultat
+    final par O(n).
+    
+    Il vient alors: T(s) = 1 + s*T(s-1) avec T(1)=1
+    D'où T(s) = 1 + s*(1 + (s-1)*T(s-2))
+              = 1 + s + s*(s-1)*(1 + T(s-3))
+	      = 1 + s + s*(s-1) + s*(s-1)*(s-2)*(1 + T(s-4))
+	      < 1 + s + s!/(s-2)! + s!/(s-3)! + ... + s!
+	      < sum_{i=0}^{s-1} s!/(s-i)!
+	      < sum_i s!/2^{s-i} (car x! >= 2^x pour x>=2)
+	      < s!*sum_i (1/2)^i < 2*s!
+
+Q8. Pour calculer OPT(V,d) il faut faire appel n fois à TSP_rec().
+    La complexité totale est donc O(n*n!)
+
+
+Q9. int somme(double s,double A, double B, int n){
+      for(int i=0;i<n;i++)
+        for(int j=0;j<n;j++)
+	  if(A[i]+B[j]==s) return 1;
+      return 0;
+    }
+
+    La complexité est O(n^2)
+
+
+Q10. somme_rec(s,A,B,n):
+     1. Si n=1, on renvoie (A[0]+B[0]==s)
+     2. On découpe A en A1,A2 et B en B1,B2
+     3. On renvoie somme_rec(s/2,A1,B2,n/2) || somme_rec(s/2,A2,B1,n/2)
+
+
+Q11. T(n) = O(n) + 2*T(n/2)
+
+
+Q12. T(n) = O(n*log(n)) d'après le Master Theorem.
+
+
+Q13.
+     1. On trie B en temps O(n*log(n)).
+     2. Pour chaque élément A[i] on teste si s-A[i] est dans B, chaque
+        fois en temps O(log(n)). Si oui, on renvoie 1
+     3. Si pas trouvé, on renvoie 0
+
+     Le temps total est O(n*log(n)).
+
